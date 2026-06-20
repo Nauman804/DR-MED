@@ -1,11 +1,13 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, send_file
 from groq import Groq
 from dotenv import load_dotenv
 import os
+import mimetypes
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../public', static_url_path='')
+
 # ✅ Safe API key load
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
@@ -33,15 +35,23 @@ IMPORTANT RULES:
 
 Start conversations warmly and end with helpful suggestions."""
 
-@app.route("/")
-def index():
-    return send_from_directory('../public', 'index.html')
+# Serve static files
+@app.route('/')
+def serve_index():
+    return send_file('../public/index.html', mimetype='text/html')
 
+@app.route('/<path:filename>')
+def serve_static(filename):
+    try:
+        return send_from_directory('../public', filename)
+    except:
+        return send_file('../public/index.html', mimetype='text/html')
 
+# API endpoint
 @app.route("/api/chat", methods=["POST"])
 def chat():
     try:
-        # ✅ SAFE JSON handling (IMPORTANT FIX)
+        # ✅ SAFE JSON handling
         data = request.get_json(silent=True) or {}
 
         user_message = data.get("message", "").strip()
@@ -83,6 +93,3 @@ def chat():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-# Vercel ke liye
-app = app  # Export for Vercel
