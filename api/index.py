@@ -1,12 +1,11 @@
-from flask import Flask, request, jsonify, send_from_directory, send_file
+from flask import Flask, request, jsonify
 from groq import Groq
 from dotenv import load_dotenv
 import os
-import mimetypes
 
 load_dotenv()
 
-app = Flask(__name__, static_folder='../public', static_url_path='')
+app = Flask(__name__)
 
 # ✅ Safe API key load
 api_key = os.getenv("GROQ_API_KEY")
@@ -35,19 +34,7 @@ IMPORTANT RULES:
 
 Start conversations warmly and end with helpful suggestions."""
 
-# Serve static files
-@app.route('/')
-def serve_index():
-    return send_file('../public/index.html', mimetype='text/html')
-
-@app.route('/<path:filename>')
-def serve_static(filename):
-    try:
-        return send_from_directory('../public', filename)
-    except:
-        return send_file('../public/index.html', mimetype='text/html')
-
-# API endpoint
+# API endpoint ONLY
 @app.route("/api/chat", methods=["POST"])
 def chat():
     try:
