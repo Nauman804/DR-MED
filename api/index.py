@@ -38,16 +38,13 @@ Start conversations warmly and end with helpful suggestions."""
 @app.route("/api/chat", methods=["POST"])
 def chat():
     try:
-        # ✅ SAFE JSON handling
         data = request.get_json(silent=True) or {}
-
         user_message = data.get("message", "").strip()
         history = data.get("history", [])
 
         if not user_message:
             return jsonify({"error": "Empty message"}), 400
 
-        # Build messages
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
         for h in history[-10:]:
@@ -58,7 +55,6 @@ def chat():
 
         messages.append({"role": "user", "content": user_message})
 
-        # AI call
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=messages,
