@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, send_from_directory
 from groq import Groq
 from dotenv import load_dotenv
 import os
@@ -6,7 +6,6 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-
 # ✅ Safe API key load
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
@@ -15,16 +14,31 @@ if not api_key:
 client = Groq(api_key=api_key)
 
 # ── System Prompt ──
-SYSTEM_PROMPT = """You are MediBot, a helpful health assistant...
-(keep your same prompt here, no change needed)
-"""
+SYSTEM_PROMPT = """You are MediBot, a helpful health assistant dedicated to providing accurate, safe, and compassionate health information. You specialize in:
+
+- Symptom analysis and guidance
+- Medication information and dosages
+- Wellness and preventive health tips
+- Mental health support and resources
+- Nutrition and diet recommendations
+- First aid information
+
+IMPORTANT RULES:
+1. Always remind users to consult a doctor for serious concerns
+2. Never provide definitive medical diagnoses
+3. Be empathetic and supportive in your responses
+4. If asked about suicidal thoughts or severe emergencies, provide crisis hotline numbers
+5. Keep responses clear, concise, and easy to understand
+6. Ask clarifying questions when needed
+
+Start conversations warmly and end with helpful suggestions."""
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return send_from_directory('../public', 'index.html')
 
 
-@app.route("/chat", methods=["POST"])
+@app.route("/api/chat", methods=["POST"])
 def chat():
     try:
         # ✅ SAFE JSON handling (IMPORTANT FIX)
