@@ -1,20 +1,18 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from groq import Groq
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 
-# ✅ Safe API key load
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
     raise ValueError("GROQ_API_KEY not found in environment")
 
 client = Groq(api_key=api_key)
 
-# ── System Prompt ──
 SYSTEM_PROMPT = """You are MediBot, a helpful health assistant dedicated to providing accurate, safe, and compassionate health information. You specialize in:
 
 - Symptom analysis and guidance
@@ -34,17 +32,23 @@ IMPORTANT RULES:
 
 Start conversations warmly and end with helpful suggestions."""
 
-# API endpoint ONLY
-@app.route("/api/chat", methods=["POST"])
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/chat", methods=["POST"])
 def chat():
     try:
         data = request.get_json(silent=True) or {}
+
         user_message = data.get("message", "").strip()
         history = data.get("history", [])
 
         if not user_message:
             return jsonify({"error": "Empty message"}), 400
 
+        # Build messages
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
         for h in history[-10:]:
@@ -55,6 +59,7 @@ def chat():
 
         messages.append({"role": "user", "content": user_message})
 
+        # AI call
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=messages,
